@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NAME: Profile
+    restart: always
+    ports:
+      - "8000:1000"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: test
+    depends_on:
+      db:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+
+  db:
+    image: postgres:14.8
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_DB=test
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  migrate:
+    image: migration
+    volumes:
+      - ./repository/postgres/migrations:/migrations
+    depends_on:
+      db:
+        condition: service_started
+
+volumes:
+  db_data:
